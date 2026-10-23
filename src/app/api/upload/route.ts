@@ -43,6 +43,14 @@ export async function POST(req: NextRequest) {
     });
     const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX!);
 
+    // Clear previous vectors so only the newly uploaded PDF is active
+    try {
+      console.log("Clearing previous vectors from Pinecone index...");
+      await pineconeIndex.deleteAll();
+    } catch (clearErr) {
+      console.warn("Notice while clearing index (safe to ignore if index was empty):", clearErr);
+    }
+
     // Store in Pinecone
     await PineconeStore.fromDocuments(validDocs, new OpenAIEmbeddings(), {
       pineconeIndex,
