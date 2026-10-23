@@ -11,7 +11,7 @@ export default function ChatbotPage() {
   const [isIndexed, setIsIndexed] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages } = useChat({
     api: "/api/chat",
   });
 
@@ -44,6 +44,7 @@ export default function ChatbotPage() {
 
       if (res.ok) {
         setIsIndexed(true);
+        setMessages([]);
         setUploadMessage("PDF successfully indexed! You can now ask questions.");
       } else {
         const error = await res.json();
@@ -59,12 +60,36 @@ export default function ChatbotPage() {
   return (
     <div className="flex flex-col h-screen bg-gray-50 items-center py-10 px-4">
       <div className="max-w-4xl w-full flex flex-col h-full bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100">
-        <div className="p-6 border-b border-gray-100 bg-white">
-          <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <FileText className="text-blue-500" />
-            PDF AI Chatbot
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">Upload a PDF and ask anything about it.</p>
+        <div className="p-6 border-b border-gray-100 bg-white flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+              <FileText className="text-blue-500" />
+              PDF AI Chatbot
+            </h1>
+            <p className="text-gray-500 text-sm mt-1">Upload a PDF and ask anything about it.</p>
+          </div>
+          {isIndexed && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setMessages([])}
+                className="text-xs bg-gray-50 hover:bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg border border-gray-200 transition-colors"
+                title="Clear current conversation"
+              >
+                Clear Chat
+              </button>
+              <button
+                onClick={() => {
+                  setIsIndexed(false);
+                  setFile(null);
+                  setUploadMessage("");
+                  setMessages([]);
+                }}
+                className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium px-3 py-1.5 rounded-lg border border-blue-200 transition-colors"
+              >
+                Upload New PDF
+              </button>
+            </div>
+          )}
         </div>
 
         {!isIndexed ? (

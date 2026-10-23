@@ -22,20 +22,25 @@ export async function POST(req: NextRequest) {
       { pineconeIndex }
     );
 
-    const retriever = vectorStore.asRetriever();
+    const retriever = vectorStore.asRetriever({
+      k: 5,
+    });
 
     const llm = new ChatOpenAI({
       modelName: 'gpt-3.5-turbo',
       streaming: true,
+      temperature: 0.2,
     });
 
     const prompt = PromptTemplate.fromTemplate(`
-      Answer the following question based only on the provided context:
-      <context>
-      {context}
-      </context>
+You are an AI assistant analyzing an uploaded document.
+Answer the user's question accurately using the context provided below. If the context does not contain enough information to answer, state clearly that the uploaded document does not appear to contain that information.
 
-      Question: {question}
+Context:
+{context}
+
+User Question: {question}
+Answer:
     `);
 
     const chain = RunnableSequence.from([

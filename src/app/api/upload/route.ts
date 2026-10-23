@@ -28,6 +28,15 @@ export async function POST(req: NextRequest) {
     });
     const splitDocs = await textSplitter.splitDocuments(docs);
 
+    const validDocs = splitDocs.filter(d => d.pageContent && d.pageContent.trim().length > 0);
+    if (validDocs.length === 0) {
+      return NextResponse.json({
+        error: "No readable text could be found in this PDF. If this is a scanned PDF (image), please use a PDF with selectable text."
+      }, { status: 400 });
+    }
+
+    console.log(`Indexing ${validDocs.length} chunks into Pinecone...`);
+
     // Initialize Pinecone
     const pinecone = new Pinecone({
       apiKey: process.env.PINECONE_API_KEY!,
@@ -35,10 +44,12 @@ export async function POST(req: NextRequest) {
     const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX!);
 
     // Store in Pinecone
-    await PineconeStore.fromDocuments(splitDocs, new OpenAIEmbeddings(), {
+    await PineconeStore.fromDocuments(validDocs, new OpenAIEmbeddings(), {
       pineconeIndex,
       maxConcurrency: 5, // Maximum number of batch requests to allow at once.
     });
+
+    console.log("Indexing completed successfully!");
 
     return NextResponse.json({ success: true, message: "PDF indexed successfully" });
   } catch (error: any) {
